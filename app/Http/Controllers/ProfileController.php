@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,12 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(private UserService $userService)
+    {
+    }
     /**
      * Display the user's profile form.
      */
@@ -38,13 +45,8 @@ class ProfileController extends Controller
         // Authorize the user to update the profile using the ProfilePolicy
         Gate::authorize('update-profile', $user);
 
-        $user->fill($request->validated());
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $user->save();
+        // Use UserService to update the user
+        $this->userService->updateUser($user, $request->validated());
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -65,7 +67,8 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        // Use UserService to delete the user
+        $this->userService->deleteUser($user);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
