@@ -5,6 +5,8 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -30,6 +32,20 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Configure the factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $role = Role::inRandomOrder()->first();
+
+            if ($role !== null) {
+                $user->assignRole($role->name);
+            }
+        });
     }
 
     /**
