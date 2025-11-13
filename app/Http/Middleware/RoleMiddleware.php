@@ -33,7 +33,7 @@ class RoleMiddleware
         $path = ltrim($request->path(), '/');
         $routeName = optional($request->route())->getName() ?? '';
 
-        // Manager: CRUD on users but cannot modify roles or permissions.
+        // Manager: CRUD on users, classes, and sections but cannot modify roles or permissions.
         if ($user->hasRole('Manager')) {
             // Disallow any routes that mention roles or permissions.
             if (str_contains($path, 'role') || str_contains($path, 'permission') || str_contains($routeName, 'role') || str_contains($routeName, 'permission')) {
@@ -42,6 +42,13 @@ class RoleMiddleware
 
             // Allow managers to access user management routes (paths that start with "users").
             if (str_starts_with($path, 'users') || str_starts_with($routeName, 'users.')) {
+                return $next($request);
+            }
+
+            // Allow managers to access classes and sections management routes (including API routes).
+            if (str_starts_with($path, 'classes') || str_starts_with($routeName, 'classes.') ||
+                str_starts_with($path, 'sections') || str_starts_with($routeName, 'sections.') ||
+                str_starts_with($path, 'api/classes') || str_starts_with($path, 'api/sections')) {
                 return $next($request);
             }
 
