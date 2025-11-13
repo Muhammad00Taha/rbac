@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
 {
@@ -20,16 +22,37 @@ class UserController extends Controller
     /**
      * Display a listing of users.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         // Check authorization using UserPolicy
         Gate::authorize('viewAny', User::class);
 
-        $users = $this->userService->getAllUsers(15);
+        if ($request->ajax()) {
+            $query = User::query()->with('roles')->select('users.*');
 
-        return view('users.index', [
-            'users' => $users,
-        ]);
+            return DataTables::eloquent($query)
+                ->addColumn('role', static function (User $user): string {
+                    return view('users.partials.role', [
+                        'roles' => $user->getRoleNames(),
+                    ])->render();
+                })
+                ->addColumn('actions', static function (User $user): string {
+                    return view('users.partials.actions', compact('user'))->render();
+                })
+                ->editColumn('name', static function (User $user): string {
+                    return view('users.partials.name', compact('user'))->render();
+                })
+                ->filterColumn('role', static function ($query, string $keyword): void {
+                    /** @var \Illuminate\Database\Eloquent\Builder $query */
+                    $query->whereHas('roles', static function ($roleQuery) use ($keyword): void {
+                        $roleQuery->where('name', 'like', '%' . $keyword . '%');
+                    });
+                })
+                ->rawColumns(['name', 'role', 'actions'])
+                ->toJson();
+        }
+
+        return view('users.index');
     }
 
     /**
@@ -58,8 +81,9 @@ class UserController extends Controller
             'role' => ['nullable', 'string', 'exists:roles,name'],
         ]);
 
-        // Hash the password before storing
-        $validated['password'] = bcrypt($validated['password']);
+        if (! $request->user()->can('users.assignRoles')) {
+            unset($validated['role']);
+        }
 
         // Use UserService to create the user
         $user = $this->userService->createUser($validated);
@@ -106,6 +130,10 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'role' => ['nullable', 'string', 'exists:roles,name'],
         ]);
+
+        if (! $request->user()->can('users.assignRoles')) {
+            unset($validated['role']);
+        }
 
         // Use UserService to update the user
         $this->userService->updateUser($user, $validated);

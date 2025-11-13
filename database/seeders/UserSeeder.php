@@ -39,6 +39,18 @@ class UserSeeder extends Seeder
             $manager->assignRole('Manager');
         }
 
+        $user = User::firstOrCreate(
+            ['email' => 'user@example.com'],
+            [
+                'name' => 'Standard User',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        if (method_exists($user, 'assignRole') && ! $user->hasRole('User')) {
+            $user->assignRole('User');
+        }
+
         // Create additional random users; their roles will be assigned by the factory
         User::factory()->count(10)->create();
     }

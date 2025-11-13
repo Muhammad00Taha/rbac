@@ -2,55 +2,63 @@
 
 namespace App\Services;
 
+use App\Models\ClassModel;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
+/**
+ * ClassService handles all class-related business logic.
+ */
 class ClassService
 {
     /**
-     * Get all classes.
+     * Get all classes with pagination.
      */
-    public function getAllClasses(): Collection
+    public function getAllClasses(int $perPage = 15): LengthAwarePaginator
     {
-        // Placeholder: implement when Class model exists
-        return collect([]);
+        return ClassModel::with('section')->paginate($perPage);
+    }
+
+    /**
+     * Get all classes without pagination.
+     */
+    public function getAllClassesNoPagination(): Collection
+    {
+        return ClassModel::with('section')->get();
     }
 
     /**
      * Get class by ID.
      */
-    public function getClassById(int $id): ?object
+    public function getClassById(int $id): ?ClassModel
     {
-        // Placeholder: implement when Class model exists
-        return null;
+        return ClassModel::with('section')->find($id);
     }
 
     /**
      * Create a new class.
      */
-    public function createClass(array $data): object
+    public function createClass(array $data): ClassModel
     {
-        // Placeholder: implement when Class model exists
-        // Should return created class instance
-        return (object) $data;
+        return ClassModel::create($data);
     }
 
     /**
      * Update an existing class.
      */
-    public function updateClass(int $id, array $data): object
+    public function updateClass(ClassModel $class, array $data): ClassModel
     {
-        // Placeholder: implement when Class model exists
-        // Should return updated class instance
-        return (object) $data;
+        $class->update($data);
+
+        return $class;
     }
 
     /**
      * Delete a class.
      */
-    public function deleteClass(int $id): bool
+    public function deleteClass(ClassModel $class): bool
     {
-        // Placeholder: implement when Class model exists
-        return true;
+        return $class->delete();
     }
 
     /**
@@ -58,7 +66,6 @@ class ClassService
      */
     public function countClasses(): int
     {
-        // Placeholder: implement when Class model exists
-        return 0;
+        return ClassModel::count();
     }
 }

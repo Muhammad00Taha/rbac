@@ -12,7 +12,11 @@ class ProfilePolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->id === $model->id || $user->hasRole('Admin');
+        if ($user->id === $model->id) {
+            return $user->can('profiles.view');
+        }
+
+        return $user->can('users.view');
     }
 
     /**
@@ -21,7 +25,11 @@ class ProfilePolicy
      */
     public function update(User $user, User $model): bool
     {
-        return $user->id === $model->id || $user->hasRole('Admin');
+        if ($user->id === $model->id) {
+            return $user->can('profiles.update');
+        }
+
+        return $user->can('users.update');
     }
 
     /**
@@ -30,6 +38,10 @@ class ProfilePolicy
      */
     public function delete(User $user, User $model): bool
     {
-        return $user->id === $model->id || $user->hasRole('Admin');
+        if ($user->id === $model->id) {
+            return $user->can('profiles.delete');
+        }
+
+        return $user->can('users.delete');
     }
 }
