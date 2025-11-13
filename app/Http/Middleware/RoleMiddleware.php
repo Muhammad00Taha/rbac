@@ -4,8 +4,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class RoleMiddleware
@@ -55,7 +55,7 @@ class RoleMiddleware
 
         // Regular User: can only view and edit their own profile.
         if ($user->hasRole('User')) {
-            if (str_starts_with($path, 'profile') || $path === '') {
+            if (str_starts_with($path, 'profile') || $path === '' || $path === 'dashboard') {
                 return $next($request);
             }
 

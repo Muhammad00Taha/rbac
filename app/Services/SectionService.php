@@ -2,55 +2,63 @@
 
 namespace App\Services;
 
+use App\Models\Section;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
+/**
+ * SectionService handles all section-related business logic.
+ */
 class SectionService
 {
     /**
-     * Get all sections.
+     * Get all sections with pagination.
      */
-    public function getAllSections(): Collection
+    public function getAllSections(int $perPage = 15): LengthAwarePaginator
     {
-        // Placeholder: implement when Section model exists
-        return collect([]);
+        return Section::paginate($perPage);
+    }
+
+    /**
+     * Get all sections without pagination.
+     */
+    public function getAllSectionsNoPagination(): Collection
+    {
+        return Section::all();
     }
 
     /**
      * Get section by ID.
      */
-    public function getSectionById(int $id): ?object
+    public function getSectionById(int $id): ?Section
     {
-        // Placeholder: implement when Section model exists
-        return null;
+        return Section::find($id);
     }
 
     /**
      * Create a new section.
      */
-    public function createSection(array $data): object
+    public function createSection(array $data): Section
     {
-        // Placeholder: implement when Section model exists
-        // Should return created section instance
-        return (object) $data;
+        return Section::create($data);
     }
 
     /**
      * Update an existing section.
      */
-    public function updateSection(int $id, array $data): object
+    public function updateSection(Section $section, array $data): Section
     {
-        // Placeholder: implement when Section model exists
-        // Should return updated section instance
-        return (object) $data;
+        $section->update($data);
+
+        return $section;
     }
 
     /**
      * Delete a section.
      */
-    public function deleteSection(int $id): bool
+    public function deleteSection(Section $section): bool
     {
-        // Placeholder: implement when Section model exists
-        return true;
+        return $section->delete();
     }
 
     /**
@@ -58,7 +66,6 @@ class SectionService
      */
     public function countSections(): int
     {
-        // Placeholder: implement when Section model exists
-        return 0;
+        return Section::count();
     }
 }

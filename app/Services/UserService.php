@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -44,11 +45,14 @@ class UserService
      */
     public function createUser(array $data): User
     {
-        $user = User::create($data);
+        $attributes = Arr::except($data, ['role']);
+        $user = User::create($attributes);
 
         // If a role is provided in the data, assign it
         if (isset($data['role']) && $data['role']) {
             $this->assignRole($user, $data['role']);
+        } else {
+            $this->assignRole($user, 'User');
         }
 
         return $user;
@@ -63,7 +67,8 @@ class UserService
      */
     public function updateUser(User $user, array $data): User
     {
-        $user->update($data);
+        $attributes = Arr::except($data, ['role']);
+        $user->update($attributes);
 
         // If a role is provided, update it
         if (isset($data['role']) && $data['role']) {
