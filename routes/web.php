@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,16 +23,42 @@ Route::middleware(['auth', 'role'])->group(function () {
 });
 
 // Manager routes: example user management area. Managers can CRUD users but
-// the RoleMiddleware prevents them from touching role/permission routes.
+// the RoleMiddleware and UserPolicy prevent them from touching role/permission routes.
 Route::prefix('users')->middleware(['auth', 'role'])->group(function () {
     // Example routes using closures so route registration is safe without
     // requiring additional controllers right now.
-    Route::get('/', fn () => 'Users index (manager/admin)')->name('users.index');
-    Route::get('/create', fn () => 'Users create (manager/admin)')->name('users.create');
-    Route::post('/', fn () => 'Users store (manager/admin)')->name('users.store');
-    Route::get('/{id}', fn ($id) => "Users show {$id} (manager/admin)")->name('users.show');
-    Route::put('/{id}', fn ($id) => "Users update {$id} (manager/admin)")->name('users.update');
-    Route::delete('/{id}', fn ($id) => "Users delete {$id} (manager/admin)")->name('users.destroy');
+    Route::get('/', function () {
+        Gate::authorize('viewAny', User::class);
+        return 'Users index (manager/admin)';
+    })->name('users.index');
+
+    Route::get('/create', function () {
+        Gate::authorize('create', User::class);
+        return 'Users create (admin only)';
+    })->name('users.create');
+
+    Route::post('/', function () {
+        Gate::authorize('create', User::class);
+        return 'Users store (admin only)';
+    })->name('users.store');
+
+    Route::get('/{id}', function ($id) {
+        $user = User::findOrFail($id);
+        Gate::authorize('view', $user);
+        return "Users show {$id} (manager/admin)";
+    })->name('users.show');
+
+    Route::put('/{id}', function ($id) {
+        $user = User::findOrFail($id);
+        Gate::authorize('update', $user);
+        return "Users update {$id} (manager/admin)";
+    })->name('users.update');
+
+    Route::delete('/{id}', function ($id) {
+        $user = User::findOrFail($id);
+        Gate::authorize('delete', $user);
+        return "Users delete {$id} (admin only)";
+    })->name('users.destroy');
 });
 
 // Admin-only routes: full access area. RoleMiddleware allows Admins through.
