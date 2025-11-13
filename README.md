@@ -397,4 +397,4 @@ For issues, questions, or contributions, please contact the development team or 
 
 ---
 
-**Note**: This is a technical assignment project demonstrating RBAC implementation best practices in Laravel. All passwords are set to `password` for demonstration purposes only. In production, enforce strong password policies and use environment-specific credentials.
+**Note**: This is a technical assignment project demonstrating RBAC implementation best practices in Laravel. All passwords are set to `password` for demonstration purposes only. 

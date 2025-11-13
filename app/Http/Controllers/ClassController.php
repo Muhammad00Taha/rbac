@@ -146,29 +146,35 @@ class ClassController extends Controller
      */
     public function getSections(Request $request): JsonResponse
     {
-        Gate::authorize('viewAny', \App\Models\Section::class);
+        try {
+            $search = $request->get('q', '');
+            $page = $request->get('page', 1);
+            $perPage = 10;
 
-        $search = $request->get('q', '');
-        $page = $request->get('page', 1);
-        $perPage = 10;
+            $query = \App\Models\Section::query();
 
-        $query = \App\Models\Section::query();
+            if ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            }
 
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%");
+            $sections = $query->paginate($perPage, ['*'], 'page', $page);
+
+            return response()->json([
+                'results' => $sections->map(fn ($section) => [
+                    'id' => $section->id,
+                    'text' => $section->name,
+                ])->values(),
+                'pagination' => [
+                    'more' => $sections->hasMorePages(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'results' => [],
+                'pagination' => ['more' => false],
+                'error' => $e->getMessage(),
+            ]);
         }
-
-        $sections = $query->paginate($perPage, ['*'], 'page', $page);
-
-        return response()->json([
-            'results' => $sections->map(fn ($section) => [
-                'id' => $section->id,
-                'text' => $section->name,
-            ]),
-            'pagination' => [
-                'more' => $sections->hasMorePages(),
-            ],
-        ]);
     }
 }
 
